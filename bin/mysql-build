@@ -1,0 +1,247 @@
+#!/usr/bin/env bash
+
+set -E
+exec 3<&2 # preserve original stderr at fd 3
+
+resolve_link() {
+  $(type -p greadlink readlink | head -1) $1
+}
+
+abs_dirname() {
+  local cwd="$(pwd)"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  pwd
+  cd "$cwd"
+}
+
+build_failed() {
+  { echo
+    echo "BUILD FAILED"
+    echo
+
+    if ! rmdir "${TEMP_PATH}" 2>/dev/null; then
+      echo "Inspect or clean up the working tree at ${TEMP_PATH}"
+
+      if file_is_not_empty "$LOG_PATH"; then
+        echo "Results logged to ${LOG_PATH}"
+        echo
+        echo "Last 10 log lines:"
+        tail -n 10 "$LOG_PATH"
+      fi
+    fi
+  } >&3
+  exit 1
+}
+
+file_is_not_empty() {
+  local filename="$1"
+  local line_count="$(wc -l "$filename" 2>/dev/null || true)"
+
+  if [ -n "$line_count" ]; then
+    words=( $line_count )
+    [ "${words[0]}" -gt 0 ]
+  else
+    return 1
+  fi
+}
+
+install_package() {
+  install_package_using "tarball" 1 $*
+}
+
+install_package_using() {
+  local package_type="$1"
+  local package_type_nargs="$2"
+  local package_name="$3"
+  shift 3
+
+  pushd "$TEMP_PATH" >&4
+  "fetch_${package_type}" "$package_name" $*
+  shift $(($package_type_nargs))
+  make_package "$package_name" $*
+  popd >&4
+
+  echo "Installed ${package_name} to ${PREFIX_PATH}" >&2
+}
+
+make_package() {
+  local package_name="$1"
+  shift
+
+  pushd "$package_name" >&4
+  build_package "$package_name" $*
+  popd >&4
+}
+
+fetch_tarball() {
+  local package_name="$1"
+  local package_url="$2"
+
+  echo "Downloading ${package_url}..." >&2
+  { curl "$package_url" > "${package_name}.tar.gz"
+    tar xzvf "${package_name}.tar.gz"
+  } >&4 2>&1
+}
+
+build_package() {
+  local package_name="$1"
+  shift
+
+  if [ "$#" -eq 0 ]; then
+    local commands="standard"
+  else
+    local commands="$*"
+  fi
+
+  echo "Installing ${package_name}..." >&2
+
+  for command in $commands; do
+    "build_package_${command}"
+  done
+}
+
+build_package_standard() {
+  local package_name="$1"
+
+  { ./configure --prefix="$PREFIX_PATH" $CONFIGURE_OPTIONS
+    make -j 2
+    make install
+  } >&4 2>&1
+}
+
+build_package_cmake() {
+  local package_name="$1"
+
+  { cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
+    make -j 2
+    make install
+  } >&4 2>&1
+}
+
+function configure_option {
+  if [ "$1" = "-D" ]; then
+    local filtered=
+
+    for option in $CONFIGURE_OPTIONS; do
+      case "$option" in
+        "$2"*) ;;
+        *) filtered="$filtered $option";;
+      esac
+    done
+
+    filtered=$(echo "$filtered" | sed -e 's/[ ]*//')
+
+    CONFIGURE_OPTIONS="$filtered"
+    return 0
+  else
+    if [ "$1" = "-R" ]; then
+      configure_option -D "$2"
+      configure_option "$2" "$3"
+      return 0
+    fi
+  fi
+
+  CONFIGURE_OPTIONS="$CONFIGURE_OPTIONS $1"
+
+  if [ -n "$2" ]; then
+    CONFIGURE_OPTIONS="$CONFIGURE_OPTIONS=$2"
+  fi
+}
+
+usage() {
+  { echo "mysql-build, Compile and Install MySQL"
+    echo "usage: mysql-build [-v|--verbose] definition prefix"
+    echo "       mysql-build --definitions"
+  } >&2
+
+  if [ -z "$1" ]; then
+    exit 1
+  fi
+}
+
+list_definitions() {
+  { for definition in "${MYSQL_BUILD_ROOT}/share/mysql-build/definitions/"*; do
+      echo "${definition##*/}"
+    done
+  } | sort
+}
+
+
+
+unset VERBOSE
+MYSQL_BUILD_ROOT="$(abs_dirname "$0")/.."
+
+CONFIGURE_OPTIONS=$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_configure_options")
+
+CMAKE_OPTIONS=$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_cmake_options")
+
+case "$1" in
+"-h" | "--help" )
+  usage without_exiting
+  { echo
+    echo "  -v/--verbose     Verbose mode: print compilation status to stdout"
+    echo "  --definitions    List all built-in definitions"
+    echo
+  } >&2
+  exit 0
+  ;;
+"--definitions" )
+  list_definitions
+  exit 0
+  ;;
+"-v" | "--verbose" )
+  VERBOSE=true
+  shift
+  ;;
+esac
+
+
+DEFINITION_PATH="$1"
+if [ -z "$DEFINITION_PATH" ]; then
+  usage
+elif [ ! -e "$DEFINITION_PATH" ]; then
+  BUILTIN_DEFINITION_PATH="${MYSQL_BUILD_ROOT}/share/mysql-build/definitions/${DEFINITION_PATH}"
+  if [ -e "$BUILTIN_DEFINITION_PATH" ]; then
+    DEFINITION_PATH="$BUILTIN_DEFINITION_PATH"
+  else
+    echo "mysql-build: definition not found: ${DEFINITION_PATH}" >&2
+    exit 1
+  fi
+fi
+
+PREFIX_PATH="$2"
+if [ -z "$PREFIX_PATH" ]; then
+  usage
+fi
+
+if [ -z "$TMPDIR" ]; then
+  TMP="/tmp"
+else
+  TMP="${TMPDIR%/}"
+fi
+
+SEED="$(date "+%Y%m%d%H%M%S").$$"
+LOG_PATH="${TMP}/mysql-build.${SEED}.log"
+TEMP_PATH="${TMP}/mysql-build.${SEED}"
+CWD="$(pwd)"
+
+exec 4<> "$LOG_PATH" # open the log file at fd 4
+if [ -n "$VERBOSE" ]; then
+  tail -f "$LOG_PATH" &
+  trap "kill 0" SIGINT SIGTERM EXIT
+fi
+
+export LDFLAGS="-L'${PREFIX_PATH}/lib' ${LDFLAGS}"
+export CPPFLAGS="-I'${PREFIX_PATH}/include' ${CPPFLAGS}"
+
+trap build_failed ERR
+mkdir -p "$TEMP_PATH"
+source "$DEFINITION_PATH"
+trap - ERR

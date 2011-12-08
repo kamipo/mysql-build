@@ -1,0 +1,1 @@
+install_package "mysql-5.5.14-spider-2.27-vp-0.16-hs-1.0-q4m-0.95a" "http://launchpadlibrarian.net/84357638/mysql-5.5.14-spider-2.27-vp-0.16-hs-1.0-q4m-0.95a.tgz" cmake
