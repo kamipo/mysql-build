@@ -1,0 +1,1 @@
+install_package "mysql-4.1.25" "http://dbstudy.info/mysql/4.1.25/mysql-4.1.25.tar.gz"
