@@ -26,15 +26,11 @@ build_failed() {
     echo "BUILD FAILED"
     echo
 
-    if ! rmdir "${TEMP_PATH}" 2>/dev/null; then
-      echo "Inspect or clean up the working tree at ${TEMP_PATH}"
-
-      if file_is_not_empty "$LOG_PATH"; then
-        echo "Results logged to ${LOG_PATH}"
-        echo
-        echo "Last 10 log lines:"
-        tail -n 10 "$LOG_PATH"
-      fi
+    if file_is_not_empty "$LOG_PATH"; then
+      echo "Results logged to ${LOG_PATH}"
+      echo
+      echo "Last 10 log lines:"
+      tail -n 10 "$LOG_PATH"
     fi
   } >&3
   exit 1
@@ -62,9 +58,12 @@ install_package_using() {
   local package_name="$3"
   shift 3
 
-  pushd "$TEMP_PATH" >&4
+  pushd "$DIST_PATH" >&4
   "fetch_${package_type}" "$package_name" $*
+  popd >&4
   shift $(($package_type_nargs))
+
+  pushd "$BUILD_PATH" >&4
   make_package "$package_name" $*
   popd >&4
 
@@ -86,7 +85,7 @@ fetch_tarball() {
 
   echo "Downloading ${package_url}..." >&2
   { curl "$package_url" > "${package_name}.tar.gz"
-    tar xzvf "${package_name}.tar.gz"
+    tar xzvf "${package_name}.tar.gz" -C "$BUILD_PATH"
   } >&4 2>&1
 }
 
@@ -227,10 +226,9 @@ else
   TMP="${TMPDIR%/}"
 fi
 
-SEED="$(date "+%Y%m%d%H%M%S").$$"
-LOG_PATH="${TMP}/mysql-build.${SEED}.log"
-TEMP_PATH="${TMP}/mysql-build.${SEED}"
-CWD="$(pwd)"
+LOG_PATH="$MYSQL_BUILD_ROOT/build.log"
+DIST_PATH="$MYSQL_BUILD_ROOT/dists"
+BUILD_PATH="$MYSQL_BUILD_ROOT/build"
 
 exec 4<> "$LOG_PATH" # open the log file at fd 4
 if [ -n "$VERBOSE" ]; then
@@ -242,6 +240,5 @@ export LDFLAGS="-L'${PREFIX_PATH}/lib' ${LDFLAGS}"
 export CPPFLAGS="-I'${PREFIX_PATH}/include' ${CPPFLAGS}"
 
 trap build_failed ERR
-mkdir -p "$TEMP_PATH"
 source "$DEFINITION_PATH"
 trap - ERR
