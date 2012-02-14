@@ -1,3 +1,3 @@
 configure_option -R "--with-charset" "latin1"
 configure_option -R "--with-extra-charsets" "all"
-install_package "mysql-4.0.30" "http://mirror.provenscaling.com/mysql/community/source/4.0/mysql-4.0.30.tar.gz"
+install_package "mysql-4.0.30" "http://dbstudy.info/mysql/4.0.30/mysql-4.0.30.tar.gz"
