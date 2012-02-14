@@ -1,0 +1,4 @@
+configure_option -R "--with-charset" "latin1"
+configure_option -R "--with-extra-charsets" "all"
+configure_option "--with-named-thread-libs" "-lpthread"
+install_package "mysql-3.23.58" "http://dbstudy.info/mysql/3.23.58/mysql-3.23.58.tar.gz"
