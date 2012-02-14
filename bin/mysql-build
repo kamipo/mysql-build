@@ -230,6 +230,10 @@ LOG_PATH="$MYSQL_BUILD_ROOT/build.log"
 DIST_PATH="$MYSQL_BUILD_ROOT/dists"
 BUILD_PATH="$MYSQL_BUILD_ROOT/build"
 
+if [ -e "$LOG_PATH" ]; then
+  unlink "$LOG_PATH"
+fi
+
 exec 4<> "$LOG_PATH" # open the log file at fd 4
 if [ -n "$VERBOSE" ]; then
   tail -f "$LOG_PATH" &
