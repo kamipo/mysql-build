@@ -1,0 +1,1 @@
+install_package "mysql-5.6.6-labs-april-2012" "http://downloads.mysql.com/snapshots/pb/mysql-5.6-labs-april-2012/mysql-5.6.6-labs-april-2012.tar.gz" cmake
