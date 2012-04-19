@@ -84,7 +84,7 @@ fetch_tarball() {
   local package_url="$2"
 
   echo "Downloading ${package_url}..." >&2
-  { curl "$package_url" > "${package_name}.tar.gz"
+  { curl -L "$package_url" > "${package_name}.tar.gz"
     tar xzvf "${package_name}.tar.gz" -C "$BUILD_PATH"
   } >&4 2>&1
 }
