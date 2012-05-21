@@ -1,0 +1,9 @@
+pushd "$DIST_PATH" >&4
+fetch_tarball "twitter-mysql-5.5.22.t5" "https://github.com/twitter/mysql/tarball/mysql-5.5.22.t5"
+popd >&4
+
+pushd "$BUILD_PATH" >&4
+make_package "twitter-mysql-be466eb" cmake
+popd >&4
+
+echo "Installed twitter-mysql-5.5.22.t5 to ${PREFIX_PATH}" >&2
