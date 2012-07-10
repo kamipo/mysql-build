@@ -1,0 +1,1 @@
+install_package "mysql-5.1.62" "http://downloads.mysql.com/archives/mysql-5.1/mysql-5.1.62.tar.gz"
