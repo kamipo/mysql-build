@@ -1,1 +1,0 @@
-install_package "mysql-5.6.8-rc" "http://cdn.mysql.com/Downloads/MySQL-5.6/mysql-5.6.8-rc.tar.gz" cmake
