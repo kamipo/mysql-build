@@ -1,0 +1,1 @@
+install_package "mysql-5.5.14-spider-3.0-vp-0.18-hs-1.2-q4m-0.95" "http://spiderformysql.com/downloads/spider-3.0/mysql-5.5.14-spider-3.0-vp-0.18-hs-1.2-q4m-0.95.tgz" cmake
