@@ -177,9 +177,9 @@ list_definitions() {
 unset VERBOSE
 MYSQL_BUILD_ROOT="$(abs_dirname "$0")/.."
 
-CONFIGURE_OPTIONS=$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_configure_options")
+CONFIGURE_OPTIONS=$MYSQL_BUILD_CONFIGURE_OPTS || $(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_configure_options")
 
-CMAKE_OPTIONS=$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_cmake_options")
+CMAKE_OPTIONS=$MYSQL_BUILD_CMAKE_OPTS || $(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_cmake_options")
 
 case "$1" in
 "-h" | "--help" )
