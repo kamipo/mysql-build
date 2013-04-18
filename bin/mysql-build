@@ -215,7 +215,7 @@ elif [ ! -e "$DEFINITION_PATH" ]; then
   fi
 fi
 
-PREFIX_PATH=$(cd "$2" && pwd)
+PREFIX_PATH="$2"
 if [ -z "$PREFIX_PATH" ]; then
   usage
 fi
