@@ -1,0 +1,1 @@
+install_package "mysql-5.7.1-m11" "http://cdn.mysql.com/Downloads/MySQL-5.7/mysql-5.7.1-m11.tar.gz" cmake
