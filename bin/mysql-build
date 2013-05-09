@@ -247,7 +247,7 @@ fi
 exec 4<> "$LOG_PATH" # open the log file at fd 4
 if [ -n "$VERBOSE" ]; then
   tail -f "$LOG_PATH" &
-  trap "kill 0" SIGINT SIGTERM EXIT
+  trap "kill $!" SIGINT SIGTERM EXIT
 fi
 
 export LDFLAGS="-L'${PREFIX_PATH}/lib' ${LDFLAGS}"
