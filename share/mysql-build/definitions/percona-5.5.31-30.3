@@ -1,0 +1,6 @@
+# PAM plugin causes build failures on MacOS X
+# See https://bugs.launchpad.net/percona-server/+bug/1012488
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITHOUT_AUTH_PAM_STORAGE_ENGINE=1"
+CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITHOUT_AUTH_PAM_COMPAT_STORAGE_ENGINE=1"
+
+install_package "Percona-Server-5.5.31-rel30.3" "http://www.percona.com/downloads/Percona-Server-5.5/Percona-Server-5.5.31-30.3/source/Percona-Server-5.5.31-rel30.3.tar.gz" cmake
