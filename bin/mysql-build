@@ -3,6 +3,40 @@
 set -E
 exec 3<&2 # preserve original stderr at fd 3
 
+
+lib() {
+  parse_options() {
+    OPTIONS=()
+    ARGUMENTS=()
+    local arg option index
+
+    for arg in "$@"; do
+      if [ "${arg:0:1}" = "-" ]; then
+        if [ "${arg:1:1}" = "-" ]; then
+          OPTIONS[${#OPTIONS[*]}]="${arg:2}"
+        else
+          index=1
+          while option="${arg:$index:1}"; do
+            [ -n "$option" ] || break
+            OPTIONS[${#OPTIONS[*]}]="$option"
+            index=$(($index+1))
+          done
+        fi
+      else
+        ARGUMENTS[${#ARGUMENTS[*]}]="$arg"
+      fi
+    done
+  }
+
+  if [ "$1" == "--$FUNCNAME" ]; then
+    declare -f "$FUNCNAME"
+    echo "$FUNCNAME \"\$1\";"
+    exit
+  fi
+}
+lib "$1"
+
+
 resolve_link() {
   $(type -p greadlink readlink | head -1) $1
 }
@@ -166,7 +200,7 @@ function configure_option {
 
 usage() {
   { echo "mysql-build, Compile and Install MySQL"
-    echo "usage: mysql-build [-v|--verbose] definition prefix"
+    echo "usage: mysql-build [-d|--debug] [-v|--verbose] definition prefix"
     echo "       mysql-build --definitions"
   } >&2
 
@@ -186,33 +220,38 @@ list_definitions() {
 
 unset VERBOSE
 MYSQL_BUILD_ROOT="$(abs_dirname "$0")/.."
+CONFIGURE_OPTIONS=${MYSQL_BUILD_CONFIGURE_OPTS:-$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_configure_options")}
+CMAKE_OPTIONS=${MYSQL_BUILD_CMAKE_OPTS:-$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_cmake_options")}
 
-CONFIGURE_OPTIONS=${MYSQL_BUILD_CONFIGURE_OPTS:=$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_configure_options")}
+parse_options "$@"
 
-CMAKE_OPTIONS=${MYSQL_BUILD_CMAKE_OPTS:=$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_cmake_options")}
+for option in "${OPTIONS[@]}"; do
+  case "$option" in
+  "h" | "help" )
+    usage without_exiting
+    { echo
+      echo "  -d/--debug       Debug build"
+      echo "  -v/--verbose     Verbose mode: print compilation status to stdout"
+      echo "  --definitions    List all built-in definitions"
+      echo
+    } >&2
+    exit 0
+    ;;
+  "definitions" )
+    list_definitions
+    exit 0
+    ;;
+  "v" | "verbose" )
+    VERBOSE=true
+    ;;
+  "d" | "debug" )
+    CONFIGURE_OPTIONS="$CONFIGURE_OPTIONS --with-debug"
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_DEBUG=1"
+    ;;
+  esac
+done
 
-case "$1" in
-"-h" | "--help" )
-  usage without_exiting
-  { echo
-    echo "  -v/--verbose     Verbose mode: print compilation status to stdout"
-    echo "  --definitions    List all built-in definitions"
-    echo
-  } >&2
-  exit 0
-  ;;
-"--definitions" )
-  list_definitions
-  exit 0
-  ;;
-"-v" | "--verbose" )
-  VERBOSE=true
-  shift
-  ;;
-esac
-
-
-DEFINITION_PATH="$1"
+DEFINITION_PATH="${ARGUMENTS[0]}"
 if [ -z "$DEFINITION_PATH" ]; then
   usage
 elif [ ! -e "$DEFINITION_PATH" ]; then
@@ -221,11 +260,11 @@ elif [ ! -e "$DEFINITION_PATH" ]; then
     DEFINITION_PATH="$BUILTIN_DEFINITION_PATH"
   else
     echo "mysql-build: definition not found: ${DEFINITION_PATH}" >&2
-    exit 1
+    exit 2
   fi
 fi
 
-PREFIX_PATH="$2"
+PREFIX_PATH="${ARGUMENTS[1]}"
 if [ -z "$PREFIX_PATH" ]; then
   usage
 fi
