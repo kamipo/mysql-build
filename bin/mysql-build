@@ -121,7 +121,9 @@ fetch_tarball() {
     echo "Use the previously fetched ${package_name}.tar.gz" >&2
   else
     echo "Downloading ${package_url}..." >&2
-    curl -L -o "${package_name}.tar.gz" "$package_url" >&2
+    if ! curl -f -L -o "${package_name}.tar.gz" "$package_url" >&2; then
+      retry_fetch_tarball $package_name $package_url
+    fi
   fi
 
   if [ -d "$BUILD_PATH/$package_name" ]; then
@@ -131,6 +133,20 @@ fetch_tarball() {
 
   echo "Unpacking tarball..." >&2
   tar xzvf "${package_name}.tar.gz" -C "$BUILD_PATH" >&4 2>&1
+}
+
+retry_fetch_tarball() {
+  local package_name="$1"
+  local package_url="$2"
+
+  if echo -n $package_url | grep -q $MYSQL_BUILD_MIRROR_URL; then
+    package_url=$(echo -n $package_url | perl -pe "s{$MYSQL_BUILD_MIRROR_URL}{$MYSQL_BUILD_ARCHIVE_URL}")
+    echo "Retry Downloading ${package_url}..." >&2
+    curl -f -L -o "${package_name}.tar.gz" "$package_url" >&2
+  else
+    echo "tarball not found" 2>&1
+    exit 1
+  fi
 }
 
 build_package() {
@@ -222,6 +238,9 @@ unset VERBOSE
 MYSQL_BUILD_ROOT="$(abs_dirname "$0")/.."
 CONFIGURE_OPTIONS=${MYSQL_BUILD_CONFIGURE_OPTS:-$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_configure_options")}
 CMAKE_OPTIONS=${MYSQL_BUILD_CMAKE_OPTS:-$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_cmake_options")}
+
+MYSQL_BUILD_MIRROR_URL=${MYSQL_BUILD_MIRROR_URL:-"http://cdn.mysql.com/Downloads/MySQL"}
+MYSQL_BUILD_ARCHIVE_URL=${MYSQL_BUILD_ARCHIVE_URL:-"http://downloads.mysql.com/archives/mysql"}
 
 parse_options "$@"
 
