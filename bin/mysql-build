@@ -109,20 +109,55 @@ make_package() {
   shift
 
   pushd "$package_name" >&4
+  before_build_package "$package_name"
   build_package "$package_name" $*
+  after_build_package "$package_name"
   popd >&4
+}
+
+http() {
+  local method="$1"
+  local url="$2"
+  local file="$3"
+  [ -n "$url" ] || return 1
+
+  if type curl &>/dev/null; then
+    "http_${method}_curl" "$url" "$file"
+  elif type wget &>/dev/null; then
+    "http_${method}_wget" "$url" "$file"
+  else
+    echo "error: please install \`curl\` or \`wget\` and try again" >&2
+    exit 1
+  fi
+}
+
+http_head_curl() {
+  curl -qsILf "$1" >&4 2>&1
+}
+
+http_get_curl() {
+  curl -C - -o "${2:--}" -qsSLf "$1"
+}
+
+http_head_wget() {
+  wget -q --spider "$1" >&4 2>&1
+}
+
+http_get_wget() {
+  wget -nv -c -O "${2:--}" "$1"
 }
 
 fetch_tarball() {
   local package_name="$1"
   local package_url="$2"
 
-  if [ -f "${package_name}.tar.gz" ]; then
-    echo "Use the previously fetched ${package_name}.tar.gz" >&2
+  local package_filename="${package_name}.tar.gz"
+  if [ -f "$package_filename" ]; then
+    echo "Use the previously fetched ${package_filename}" >&2
   else
     echo "Downloading ${package_url}..." >&2
-    if ! curl -f -L -o "${package_name}.tar.gz" "$package_url" >&2; then
-      retry_fetch_tarball $package_name $package_url
+    if ! http get "$package_url" "$package_filename" >&2; then
+      retry_fetch_tarball "$package_filename" "$package_url"
     fi
   fi
 
@@ -132,17 +167,17 @@ fetch_tarball() {
   fi
 
   echo "Unpacking tarball..." >&2
-  tar xzvf "${package_name}.tar.gz" -C "$BUILD_PATH" >&4 2>&1
+  tar xzvf "$package_filename" -C "$BUILD_PATH" >&4 2>&1
 }
 
 retry_fetch_tarball() {
-  local package_name="$1"
+  local package_filename="$1"
   local package_url="$2"
 
   if echo -n $package_url | grep -q $MYSQL_BUILD_MIRROR_URL; then
     package_url=$(echo -n $package_url | perl -pe "s{$MYSQL_BUILD_MIRROR_URL}{$MYSQL_BUILD_ARCHIVE_URL}")
     echo "Retry Downloading ${package_url}..." >&2
-    curl -f -L -o "${package_name}.tar.gz" "$package_url" >&2
+    http get "$package_url" "$package_filename" >&2
   else
     echo "tarball not found" 2>&1
     exit 1
@@ -184,6 +219,26 @@ build_package_cmake() {
   } >&4 2>&1
 }
 
+declare -a before_hooks after_hooks
+
+before_build() {
+  local hook="$1"
+  before_hooks["${#before_hooks[@]}"]="$hook"
+}
+
+after_build() {
+  local hook="$1"
+  after_hooks["${#after_hooks[@]}"]="$hook"
+}
+
+before_build_package() {
+  for hook in "${before_hooks[@]}"; do eval "$hook"; done
+}
+
+after_build_package() {
+  for hook in "${after_hooks[@]}"; do eval "$hook"; done
+}
+
 function configure_option {
   if [ "$1" = "-D" ]; then
     local filtered=
@@ -216,8 +271,9 @@ function configure_option {
 
 usage() {
   { echo "mysql-build, Compile and Install MySQL"
-    echo "usage: mysql-build [-d|--debug] [-v|--verbose] definition prefix"
+    echo "usage: mysql-build [-v|--verbose] [--with-debug] definition prefix [plugin[,...]]"
     echo "       mysql-build --definitions"
+    echo "       mysql-build --plugins"
   } >&2
 
   if [ -z "$1" ]; then
@@ -232,7 +288,31 @@ list_definitions() {
   } | sort
 }
 
+list_plugins() {
+  { for plugin in "${MYSQL_BUILD_ROOT}/share/mysql-build/plugins/"*; do
+      echo "${plugin##*/}"
+    done
+  } | sort
+}
 
+enable_plugins() {
+  local IFS=","
+  local plugins="$1"
+  local plugin_path builtin_plugin_path
+
+  for plugin_path in $plugins; do
+    if [ ! -e "$plugin_path" ]; then
+      builtin_plugin_path="${MYSQL_BUILD_ROOT}/share/mysql-build/plugins/${plugin_path}"
+      if [ -e "$builtin_plugin_path" ]; then
+        plugin_path="$builtin_plugin_path"
+      else
+        echo "mysql-build: plugin not found: ${plugin_path}" >&2
+        exit 2
+      fi
+    fi
+    source "$plugin_path"
+  done
+}
 
 unset VERBOSE
 MYSQL_BUILD_ROOT="$(abs_dirname "$0")/.."
@@ -249,9 +329,10 @@ for option in "${OPTIONS[@]}"; do
   "h" | "help" )
     usage without_exiting
     { echo
-      echo "  -d/--debug       Debug build"
       echo "  -v/--verbose     Verbose mode: print compilation status to stdout"
+      echo "  --with-debug     Debug build"
       echo "  --definitions    List all built-in definitions"
+      echo "  --plugins        List all built-in plugins"
       echo
     } >&2
     exit 0
@@ -260,10 +341,14 @@ for option in "${OPTIONS[@]}"; do
     list_definitions
     exit 0
     ;;
+  "plugins" )
+    list_plugins
+    exit 0
+    ;;
   "v" | "verbose" )
     VERBOSE=true
     ;;
-  "d" | "debug" )
+  "with-debug" )
     CONFIGURE_OPTIONS="$CONFIGURE_OPTIONS --with-debug"
     CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_DEBUG=1"
     ;;
@@ -314,5 +399,6 @@ export CPPFLAGS="-I'${PREFIX_PATH}/include' ${CPPFLAGS}"
 export LANG=C
 
 trap build_failed ERR
+enable_plugins "${ARGUMENTS[2]}"
 source "$DEFINITION_PATH"
 trap - ERR
