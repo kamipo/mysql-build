@@ -170,7 +170,7 @@ build_package_standard() {
   local package_name="$1"
 
   { ./configure --prefix="$PREFIX_PATH" $CONFIGURE_OPTIONS
-    make -j 2
+    make $MAKE_OPTS
     make install
   } >&4 2>&1
 }
@@ -179,7 +179,7 @@ build_package_cmake() {
   local package_name="$1"
 
   { cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
-    make -j 2
+    make $MAKE_OPTS
     make install
   } >&4 2>&1
 }
@@ -306,6 +306,12 @@ exec 4<> "$LOG_PATH" # open the log file at fd 4
 if [ -n "$VERBOSE" ]; then
   tail -f "$LOG_PATH" &
   trap "kill $!" SIGINT SIGTERM EXIT
+fi
+
+if [ "${MAKEOPTS+defined}" ]; then
+  MAKE_OPTS="$MAKEOPTS"
+elif [ -z "${MAKE_OPTS+defined}" ]; then
+  MAKE_OPTS="-j 2"
 fi
 
 export LDFLAGS="-L'${PREFIX_PATH}/lib' ${LDFLAGS}"
