@@ -1,0 +1,16 @@
+mroonga() {
+  local package_name="mroonga-3.07"
+  local package_filename="${package_name}.tar.gz"
+  local package_url="http://packages.groonga.org/source/mroonga/${package_filename}"
+  local build_path="$(abs_dirname)"
+
+  pushd "$DIST_PATH" >&4
+  if [ ! -f "$package_filename" ]; then
+    http get "$package_url" "$package_filename"
+  fi
+  tar xzvf "$package_filename" -C "${build_path}/storage" >&4 2>&1
+  popd >&4
+  mv "storage/$package_name" "storage/mroonga"
+}
+
+before_build "mroonga"
