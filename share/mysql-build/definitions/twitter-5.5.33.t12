@@ -1,0 +1,1 @@
+install_package "mysql-mysql-5.5.33.t12" "https://github.com/twitter/mysql/archive/mysql-5.5.33.t12.tar.gz" cmake
