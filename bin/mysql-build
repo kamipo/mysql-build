@@ -399,9 +399,6 @@ elif [ -z "${MAKE_OPTS+defined}" ]; then
   MAKE_OPTS="-j 2"
 fi
 
-export LDFLAGS="-L'${PREFIX_PATH}/lib' ${LDFLAGS}"
-export CPPFLAGS="-I'${PREFIX_PATH}/include' ${CPPFLAGS}"
-
 export LANG=C
 
 trap build_failed ERR
