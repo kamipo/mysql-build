@@ -1,0 +1,54 @@
+tokudb() {
+  local toku_backup_name="backup-community-tokudb-7.1.0"
+  local toku_backup_filename="${toku_backup_name}.tar.gz"
+  local toku_backup_url="https://github.com/Tokutek/backup-community/archive/tokudb-7.1.0.tar.gz"
+
+  local tokudb_name="ft-engine-tokudb-7.1.0"
+  local tokudb_filename="${tokudb_name}.tar.gz"
+  local tokudb_url="https://github.com/Tokutek/ft-engine/archive/tokudb-7.1.0.tar.gz"
+
+  local ft_index_name="ft-index-tokudb-7.1.0"
+  local ft_index_filename="${ft_index_name}.tar.gz"
+  local ft_index_url="https://github.com/Tokutek/ft-index/archive/tokudb-7.1.0.tar.gz"
+
+  local jemalloc_name="jemalloc-tokudb-7.1.0"
+  local jemalloc_filename="${jemalloc_name}.tar.gz"
+  local jemalloc_url="https://github.com/Tokutek/jemalloc/archive/tokudb-7.1.0.tar.gz"
+
+  if [ ! -f "${DIST_PATH}/${toku_backup_filename}" ]; then
+    http get "$toku_backup_url" "${DIST_PATH}/${toku_backup_filename}"
+  fi
+  tar xzvf "${DIST_PATH}/${toku_backup_filename}" >&4 2>&1
+  cp -r "${toku_backup_name}/backup" toku_backup
+
+  if [ ! -f "${DIST_PATH}/${tokudb_filename}" ]; then
+    http get "$tokudb_url" "${DIST_PATH}/${tokudb_filename}"
+  fi
+  tar xzvf "${DIST_PATH}/${tokudb_filename}" >&4 2>&1
+
+  # install the tokudb storage engine source
+  cp -r "${tokudb_name}/storage/tokudb" storage/
+  # merge the mysql tests
+  mv mysql-test mysql-test-save
+  cp -r "${tokudb_name}/mysql-test" .
+  cp -r mysql-test-save/* mysql-test
+  rm -rf mysql-test-save
+  # install the tokudb scripts
+  cp -r "${tokudb_name}/scripts/"* scripts/
+
+  mkdir storage/tokudb/ft-index
+  if [ ! -f "${DIST_PATH}/${ft_index_filename}" ]; then
+    http get "$ft_index_url" "${DIST_PATH}/${ft_index_filename}"
+  fi
+  tar xzvf "${DIST_PATH}/${ft_index_filename}" --strip-components=1 -C storage/tokudb/ft-index >&4 2>&1
+
+  mkdir storage/tokudb/ft-index/third_party/jemalloc
+  if [ ! -f "${DIST_PATH}/${jemalloc_filename}" ]; then
+    http get "$jemalloc_url" "${DIST_PATH}/${jemalloc_filename}"
+  fi
+  tar xzvf "${DIST_PATH}/${jemalloc_filename}" --strip-components=1 -C storage/tokudb/ft-index/third_party/jemalloc >&4 2>&1
+}
+
+before_build "tokudb"
+
+install_package "mysql-tokudb-7.1.0" "https://github.com/Tokutek/mysql/archive/tokudb-7.1.0.tar.gz" cmake
