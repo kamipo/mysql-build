@@ -1,0 +1,1 @@
+install_package "Percona-Server-5.5.34-rel32.0" "http://www.percona.com/downloads/Percona-Server-5.5/Percona-Server-5.5.34-rel32.0/source/Percona-Server-5.5.34-rel32.0.tar.gz" cmake
