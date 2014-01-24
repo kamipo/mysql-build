@@ -206,7 +206,7 @@ build_package_standard() {
 
   { ./configure --prefix="$PREFIX_PATH" $CONFIGURE_OPTIONS
     make $MAKE_OPTS
-    make install
+    $MAKE_INSTALL 
   } >&4 2>&1
 }
 
@@ -215,7 +215,7 @@ build_package_cmake() {
 
   { cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
     make $MAKE_OPTS
-    make install
+    $MAKE_INSTALL 
   } >&4 2>&1
 }
 
@@ -315,6 +315,7 @@ enable_plugins() {
 }
 
 unset VERBOSE
+MAKE_INSTALL="make install"
 MYSQL_BUILD_ROOT="$(abs_dirname "$0")/.."
 CONFIGURE_OPTIONS=${MYSQL_BUILD_CONFIGURE_OPTS:-$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_configure_options")}
 CMAKE_OPTIONS=${MYSQL_BUILD_CMAKE_OPTS:-$(cat "$MYSQL_BUILD_ROOT/share/mysql-build/default_cmake_options")}
@@ -333,6 +334,7 @@ for option in "${OPTIONS[@]}"; do
       echo "  --with-debug     Debug build"
       echo "  --definitions    List all built-in definitions"
       echo "  --plugins        List all built-in plugins"
+      echo "  --sudo           Run install as superuser"
       echo
     } >&2
     exit 0
@@ -351,6 +353,9 @@ for option in "${OPTIONS[@]}"; do
   "with-debug" )
     CONFIGURE_OPTIONS="$CONFIGURE_OPTIONS --with-debug"
     CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_DEBUG=1"
+    ;;
+  "sudo" )
+    MAKE_INSTALL="sudo $MAKE_INSTALL"
     ;;
   esac
 done
