@@ -1,0 +1,5 @@
+innodb-memcached() {
+  CMAKE_OPTIONS="${CMAKE_OPTIONS} -DWITH_INNODB_MEMCACHED=ON"
+}
+
+before_build "innodb-memcached"
