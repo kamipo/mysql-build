@@ -1,0 +1,1 @@
+install_package "mysql-5.0.96" "http://dbstudy.info/mysql/5.0.96/mysql-5.0.96.tar.gz"
