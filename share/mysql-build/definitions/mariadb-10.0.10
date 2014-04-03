@@ -1,0 +1,1 @@
+install_package "mariadb-10.0.10" "http://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-10.0.10/kvm-tarbake-jaunty-x86/mariadb-10.0.10.tar.gz" cmake
