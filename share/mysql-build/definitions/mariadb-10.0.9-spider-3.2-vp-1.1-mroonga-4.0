@@ -1,0 +1,1 @@
+install_package "mariadb-10.0.9-spider-3.2-vp-1.1-mroonga-4.0" "http://spiderformysql.com/downloads/spider-3.2/mariadb-10.0.9-spider-3.2-vp-1.1-mroonga-4.0.tgz" cmake
