@@ -1,5 +1,5 @@
 mroonga() {
-  local package_name="mroonga-4.00"
+  local package_name="mroonga-4.02"
   local package_filename="${package_name}.tar.gz"
   local package_url="http://packages.groonga.org/source/mroonga/${package_filename}"
   local build_path="$(abs_dirname)"
