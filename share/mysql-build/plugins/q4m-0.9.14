@@ -1,7 +1,7 @@
 q4m() {
-  local package_name="q4m-0.9.13"
+  local package_name="q4m-0.9.14"
   local package_filename="${package_name}.tar.gz"
-  local package_url="https://github.com/q4m/q4m/archive/0.9.13.tar.gz"
+  local package_url="https://github.com/q4m/q4m/archive/0.9.14.tar.gz"
   local build_path="$(abs_dirname)"
 
   pushd "$DIST_PATH" >&4
