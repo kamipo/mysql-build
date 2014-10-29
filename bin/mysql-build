@@ -282,7 +282,7 @@ function configure_option {
 
 usage() {
   { echo "mysql-build, Compile and Install MySQL"
-    echo "usage: mysql-build [-v|--verbose] [--with-debug] definition prefix [plugin[,...]]"
+    echo "usage: mysql-build [-v|--verbose] [--with-debug] [--sudo] definition prefix [plugin[,...]]"
     echo "       mysql-build --definitions"
     echo "       mysql-build --plugins"
   } >&2
