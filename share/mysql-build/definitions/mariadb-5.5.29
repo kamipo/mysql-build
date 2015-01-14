@@ -1,1 +1,1 @@
-install_package "mariadb-5.5.29" "http://ftp.yz.yamagata-u.ac.jp/pub/dbms/mariadb/mariadb-5.5.29/kvm-tarbake-jaunty-x86/mariadb-5.5.29.tar.gz" cmake
+install_package "mariadb-5.5.29" "http://archive.mariadb.org/mariadb-5.5.29/kvm-tarbake-jaunty-x86/mariadb-5.5.29.tar.gz" cmake
