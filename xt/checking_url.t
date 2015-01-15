@@ -1,5 +1,7 @@
+use strict;
+use warnings;
 use Test::More;
-use LWP::UserAgent;
+use HTTP::Tiny;
 
 my @definitions= glob("share/mysql-build/definitions/*");
 
@@ -24,9 +26,8 @@ sub request_head
 {
   my ($url)= @_;
 
-  my $ua = LWP::UserAgent->new();
-  my $req= HTTP::Request->new(HEAD => $url);
-  my $res= $ua->request($req);
+  my $ua = HTTP::Tiny->new;
+  my $res= $ua->head($url);
 
-  return $res->code;
+  $res->{status};
 }
