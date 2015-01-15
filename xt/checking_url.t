@@ -1,32 +1,28 @@
+use strict;
+use warnings;
 use Test::More;
-use LWP::UserAgent;
+use HTTP::Tiny;
+use File::Basename;
 
-my @definitions= glob("share/mysql-build/definitions/*");
+my @definitions = glob(dirname(__FILE__)."/../share/mysql-build/definitions/*");
 
-foreach my $definition (@definitions)
-{
-  open(my $fh, "<", $definition) or die;
+for my $definition (@definitions) {
+    open(my $fh, "<", $definition) or die;
 
-  while (my $line= <$fh>)
-  {
-    if ($line =~ qr|(https?://.+\.tar\.gz)|)
-    {
-      my $url= $1;
-      is(request_head($url), 200, $definition)
+    while (my $line = <$fh>) {
+        if ($line =~ qr|(?<url>https?://.+\.tar\.gz)|) {
+            is request_head($+{url}), 200, $definition;
+        }
     }
-  }
 }
 
 done_testing;
 
+sub request_head {
+    my $url = shift;
 
-sub request_head
-{
-  my ($url)= @_;
+    my $ua = HTTP::Tiny->new;
+    my $res = $ua->head($url);
 
-  my $ua = LWP::UserAgent->new();
-  my $req= HTTP::Request->new(HEAD => $url);
-  my $res= $ua->request($req);
-
-  return $res->code;
+    $res->{status};
 }
