@@ -2,6 +2,8 @@
 
 mysql-build - provides a command to compile and install different versions of MySQL.
 
+The overall structure is loosly borrowed from Sam Stephenson's [ruby-build](https://github.com/sstephenson/ruby-build).
+
 ## Installation
 
 ```
