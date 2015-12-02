@@ -1,0 +1,1 @@
+install_package "mariadb-10.0.22" "http://archive.mariadb.org/mariadb-10.0.22/source/mariadb-10.0.22.tar.gz" cmake
