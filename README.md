@@ -16,11 +16,11 @@ export PATH="$HOME/mysql-build/bin:$PATH"
 
 ```
 mkdir -p ~/opt/mysql
-mysql-build -v 5.6.13 ~/opt/mysql/5.6.13
+mysql-build -v 5.7.10 ~/opt/mysql/mysql-5.7.10
 
-cd ~/opt/mysql/5.6.13
-./scripts/mysql_install_db
+cd ~/opt/mysql/mysql-5.7.10
+./bin/mysqld --initialize-insecure --basedir=.
 ./bin/mysqld_safe &
 
-./bin/mysql -e 'show variables like "version"'
+./bin/mysql -e 'SELECT @@version'
 ```
