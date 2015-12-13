@@ -1,1 +1,1 @@
-install_package "mysql-5.6.15" "http://downloads.mysql.com/archives/get/file/mysql-5.6.15.tar.gz" cmake
+install_package "mysql-5.6.15" "http://cdn.mysql.com/archives/mysql-5.6/mysql-5.6.15.tar.gz" cmake

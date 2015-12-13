@@ -1,1 +1,1 @@
-install_package "mysql-5.7.6-m16" "http://cdn.mysql.com/Downloads/MySQL-5.7/mysql-5.7.6-m16.tar.gz" cmake575
+install_package "mysql-5.7.6-m16" "http://cdn.mysql.com/archives/mysql-5.7/mysql-5.7.6-m16.tar.gz" cmake575

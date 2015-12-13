@@ -1,0 +1,1 @@
+install_package "mysql-5.7.8-rc" "http://cdn.mysql.com/archives/mysql-5.7/mysql-5.7.8-rc.tar.gz" cmake575
