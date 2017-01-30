@@ -1,0 +1,1 @@
+install_package "mysql-8.0.0-dmr" "http://cdn.mysql.com/Downloads/MySQL-8.0/mysql-8.0.0-dmr.tar.gz" cmake575
