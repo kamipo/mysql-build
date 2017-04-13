@@ -1,0 +1,1 @@
+install_package "mysql-8.0.1-dmr" "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-boost-8.0.1-dmr.tar.gz" cmake_local_boost

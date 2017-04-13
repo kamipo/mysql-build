@@ -229,6 +229,16 @@ build_package_cmake575() {
   } >&4 2>&1
 }
 
+build_package_cmake_local_boost() {
+  local package_name="$1"
+
+  { CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_BOOST=$BUILD_PATH/$package_name/boost"
+    cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
+    make $MAKE_OPTS
+    $MAKE_INSTALL 
+  } >&4 2>&1
+}
+
 
 declare -a before_hooks after_hooks
 
