@@ -197,7 +197,7 @@ build_package() {
   echo "Installing ${package_name}..." >&2
 
   for command in $commands; do
-    "build_package_${command}"
+    "build_package_${command}" "$package_name"
   done
 }
 
