@@ -206,7 +206,7 @@ build_package_standard() {
 
   { ./configure --prefix="$PREFIX_PATH" $CONFIGURE_OPTIONS
     make $MAKE_OPTS
-    $MAKE_INSTALL 
+    $MAKE_INSTALL
   } >&4 2>&1
 }
 
@@ -215,7 +215,7 @@ build_package_cmake() {
 
   { cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
     make $MAKE_OPTS
-    $MAKE_INSTALL 
+    $MAKE_INSTALL
   } >&4 2>&1
 }
 
@@ -225,7 +225,7 @@ build_package_cmake575() {
   { CMAKE_OPTIONS="$CMAKE_OPTIONS -DDOWNLOAD_BOOST=1 -DWITH_BOOST=$BUILD_PATH/my_boost"
     cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
     make $MAKE_OPTS
-    $MAKE_INSTALL 
+    $MAKE_INSTALL
   } >&4 2>&1
 }
 
@@ -235,7 +235,17 @@ build_package_cmake_local_boost() {
   { CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_BOOST=$BUILD_PATH/$package_name/boost"
     cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
     make $MAKE_OPTS
-    $MAKE_INSTALL 
+    $MAKE_INSTALL
+  } >&4 2>&1
+}
+
+build_package_cmake_force_insource_boost() {
+  local package_name="$1"
+
+  { CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_BOOST=$BUILD_PATH/$package_name/boost -DFORCE_INSOURCE_BUILD=1"
+    cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
+    make $MAKE_OPTS
+    $MAKE_INSTALL
   } >&4 2>&1
 }
 

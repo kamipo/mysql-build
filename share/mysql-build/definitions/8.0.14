@@ -1,0 +1,1 @@
+install_package "mysql-8.0.14" "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-boost-8.0.14.tar.gz" cmake_force_insource_boost
