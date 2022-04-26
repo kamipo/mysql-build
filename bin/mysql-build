@@ -232,10 +232,13 @@ build_package_cmake575() {
 build_package_cmake_local_boost() {
   local package_name="$1"
 
-  { CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_BOOST=$BUILD_PATH/$package_name/boost"
-    cmake . -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
+  { mkdir working_dir
+    pushd working_dir
+    CMAKE_OPTIONS="$CMAKE_OPTIONS -DWITH_BOOST=$BUILD_PATH/$package_name/boost"
+    cmake ../ -DCMAKE_INSTALL_PREFIX="$PREFIX_PATH" $CMAKE_OPTIONS
     make $MAKE_OPTS
-    $MAKE_INSTALL 
+    $MAKE_INSTALL
+    popd
   } >&4 2>&1
 }
 
