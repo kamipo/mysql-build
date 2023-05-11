@@ -7,7 +7,7 @@ The overall structure is loosly borrowed from Sam Stephenson's [ruby-build](http
 ## Installation
 
 ```
-git clone git://github.com/kamipo/mysql-build.git ~/mysql-build
+git clone https://github.com/kamipo/mysql-build.git ~/mysql-build
 
 export PATH="$HOME/mysql-build/bin:$PATH"
 ```
